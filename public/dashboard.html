@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To Doodle</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="../app.js" defer type="module"></script>
+    <script src="../todo.js" defer type="module"></script>
+</head>
+<body>
+    <header>
+        <h2>TASKS</h2>
+        <button id="logout-btn">Log out</button>
+    </header>
+    <section class="to-do-section">
+        <ul class="task-list">
+            <h3>Loading...</h3>
+        </ul>
+        <div class="plus-btn"><p>+</p></div>
+        <div class="input-area">
+            <input id="new-task-input" type="text" placeholder="Type task here...">
+            <div class="priority-container">
+                <h3>Priority</h3>
+                <div class="priority-options">
+                    <p>Low</p>
+                    <p>Medium</p>
+                    <p>High</p>
+                </div>
+                <input type="range" min="1" max="3" id="priority-slider">
+            </div>
+            <form>
+                <button id="new-task-btn">Add</button>
+            </form>
+        </div>
+    </section>
+
+
+    
+</body>
+</html>
