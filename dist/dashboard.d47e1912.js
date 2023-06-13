@@ -611,7 +611,7 @@ var _auth = require("@firebase/auth");
                 if (hoursSinceCompletion >= 12) tasksToRemove.push(task);
             }
             for (let task of tasksToRemove){
-                const taskDoc = (0, _firestore.doc)((0, _appJs.db), "tasks", (0, _appJs.auth).currentUser.uid, task.id);
+                const taskDoc = (0, _firestore.doc)((0, _appJs.db), "users", (0, _appJs.auth).currentUser.uid, "tasks", task.id);
                 await (0, _firestore.deleteDoc)(taskDoc);
                 const index = taskArray.indexOf(task);
                 if (index !== -1) taskArray.splice(index, 1);

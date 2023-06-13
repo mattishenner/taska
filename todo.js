@@ -46,7 +46,7 @@ onAuthStateChanged(auth, (user) => {
             }
         
             for (let task of tasksToRemove){
-                const taskDoc = doc(db, "tasks", auth.currentUser.uid, task.id);
+                const taskDoc = doc(db, "users", auth.currentUser.uid, "tasks", task.id);
                 await deleteDoc(taskDoc);
         
                 const index = taskArray.indexOf(task);
