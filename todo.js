@@ -1,6 +1,11 @@
-import { addDoc, collection, getDocs, updateDoc, doc, deleteDoc } from "firebase/firestore";
+import { addDoc, collection, getDocs, updateDoc, doc, deleteDoc, query, orderBy, writeBatch, update, commit } from "firebase/firestore";
 import { db, app, auth } from "./app.js";
 import { onAuthStateChanged } from "@firebase/auth";
+import Sortable from "sortablejs";
+import { hyphenate, hyphenateHTML, hyphenateHTMLSync, hyphenateSync } from "hyphen/en";
+
+//Loading 
+const loader = document.querySelector(".load-container");
 
 onAuthStateChanged(auth, (user) => {
     if (user) {
@@ -11,7 +16,9 @@ onAuthStateChanged(auth, (user) => {
         
         //Get tasks from firestore
         async function getTasks() {
-            const taskSnapshot = await getDocs(collection(db, "users", auth.currentUser.uid, "tasks"));
+            loader.classList.remove("hidden");
+            const taskQuery = query(collection(db, "users", auth.currentUser.uid, "tasks"), orderBy("index"));
+            const taskSnapshot = await getDocs(taskQuery);
             taskArray = taskSnapshot.docs.map(doc => {
                 let data = doc.data();
                 return {
@@ -21,6 +28,7 @@ onAuthStateChanged(auth, (user) => {
                 }
             })
             console.log(taskArray)
+            loader.classList.add("hidden");
         }
         
         window.addEventListener("keydown", (event) => {
@@ -63,6 +71,7 @@ onAuthStateChanged(auth, (user) => {
             taskList.innerHTML = "";
             taskArray.forEach((task) => {
                 const li = document.createElement('li');
+                li.id = task.id;
                 const innerText = document.createElement('p');
                 const delBtn = document.createElement('h4');
                 
@@ -80,7 +89,7 @@ onAuthStateChanged(auth, (user) => {
                     li.classList.add('low-priority');
                 }
         
-                delBtn.innerText = 'Delete';
+                delBtn.innerText = 'Remove';
                 delBtn.classList.add('delete');
         
                 //Delete task
@@ -125,12 +134,15 @@ onAuthStateChanged(auth, (user) => {
         //Create new task
         newTaskBtn?.addEventListener('click', async (event) => {
             event.preventDefault();
+
+            let newTaskText = hyphenateSync(newTaskInput.value);
         
             const newTask = {
-                task: newTaskInput.value,
+                task: newTaskText,
                 done: false,
                 completedDate: null,
-                priority: Number(prioritySlider.value)
+                priority: Number(prioritySlider.value),
+                index: taskArray.length
             }
         
             //add new document to firestore
@@ -162,11 +174,59 @@ onAuthStateChanged(auth, (user) => {
         //Open and close input area
         const plusBtn = document.querySelector('.plus-btn');
         const inputArea = document.querySelector('.input-area');
+        let inputAreaOpen = false;
         
         plusBtn.addEventListener('click', () => {
+            inputAreaOpen = !inputAreaOpen;
             inputArea.classList.toggle('show');
-            newTaskInput.focus();
+            if (inputAreaOpen === true){
+                newTaskInput.focus();
+            } else {
+                newTaskInput.blur();
+            }
             plusBtn.classList.toggle('rotate');
         });
+
+        //Update index of tasks function
+        async function updateIndex() {
+            const newTaskArray = [];
+            const idArray = sortable.toArray();
+            console.log("id array", idArray);
+            idArray.forEach(id => {
+                console.log("task array before find", taskArray);
+                const task = taskArray.find(task => task.id === id);
+                newTaskArray.push(task);
+                console.log("task", task);
+            });
+            taskArray = newTaskArray;
+            console.log("task array", taskArray);
+
+
+            const batch = writeBatch(db); // initiate batch        
+            taskArray.forEach((task, index) => {
+                const taskRef = doc(db, "users", auth.currentUser.uid, "tasks", task.id);
+                batch.update(taskRef, { index }); // queue updates
+            });
+            await batch.commit(); // commit all updates in a single request
+        }
+
+        //Sortable
+        const taskListEl = document.querySelector('.task-list');
+        let sortable = Sortable.create(taskListEl, {
+            delay: 100,
+            animation: 150,
+            sort: true,
+            dataIdAttr: 'id',
+            easing: "cubic-bezier(1, 0, 0, 1)",
+            onEnd: updateIndex
+        });
+
+
+        ////END OF if(user)
     }  
 });
+
+
+
+
+

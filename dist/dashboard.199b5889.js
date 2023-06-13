@@ -689,6 +689,6 @@ async function saveTheme() {
     }
 });
 
-},{"./app.js":"igcvL","firebase/firestore":"8A4BC","firebase/auth":"79vzg"}]},["h6KVy","cjU0c"], "cjU0c", "parcelRequireec8e")
+},{"firebase/auth":"79vzg","./app.js":"igcvL","firebase/firestore":"8A4BC"}]},["h6KVy","cjU0c"], "cjU0c", "parcelRequireec8e")
 
 //# sourceMappingURL=dashboard.199b5889.js.map

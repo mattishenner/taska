@@ -11,18 +11,20 @@
     <script src="../theme.js" defer type="module"></script>
 </head>
 <body>
-    <!-- <button id="logout-btn">Log out</button> -->
     <header>
         <h2 class="logo">TASKA</h2>
     </header>
+    <div class="load-container">  
+        <div class="d1"></div>
+        <div class="d2"></div>
+    </div>
     <section class="to-do-section">
         <ul class="task-list">
-            <h3>Loading...</h3>
         </ul>
         <div class="plus-btn"><p>+</p></div>
         <div class="input-area">
             <input id="new-task-input" type="text" placeholder="Type task here...">
-            <div class="priority-container">
+            <!-- <div class="priority-container">
                 <h3>Priority</h3>
                 <div class="priority-options">
                     <p>Low</p>
@@ -30,10 +32,11 @@
                     <p>High</p>
                 </div>
                 <input type="range" min="1" max="3" id="priority-slider">
-            </div>
+            </div> -->
             <form>
                 <button id="new-task-btn">Add</button>
             </form>
+            <button id="logout-btn">Log out</button>
         </div>
     </section>
 
