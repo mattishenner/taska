@@ -579,7 +579,6 @@ var _appJs = require("./app.js");
 var _firestore = require("firebase/firestore");
 const logo = document.querySelector(".logo");
 const rootElement = document.querySelector(":root");
-const rootStyles = getComputedStyle(rootElement);
 let currentThemeIndex = 0;
 const colorCombos = [
     {
@@ -680,12 +679,14 @@ async function saveTheme() {
     if (user) {
         const userDoc = (0, _firestore.doc)((0, _appJs.db), "users", (0, _appJs.auth).currentUser.uid);
         const userDocSnap = await (0, _firestore.getDoc)(userDoc);
-        const userData = userDocSnap.data();
-        if (userData.theme) {
-            currentThemeIndex = userData.theme.lastTheme;
-            changeColor("--text", colorCombos[currentThemeIndex].text);
-            changeColor("--background", colorCombos[currentThemeIndex].background);
-        }
+        if (userDocSnap.exists()) {
+            const userData = userDocSnap.data();
+            if (userData.theme) {
+                currentThemeIndex = userData.theme.lastTheme;
+                changeColor("--text", colorCombos[currentThemeIndex].text);
+                changeColor("--background", colorCombos[currentThemeIndex].background);
+            }
+        } else console.log("No preferred theme!");
     }
 });
 

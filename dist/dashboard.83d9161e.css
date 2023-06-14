@@ -395,4 +395,42 @@ p.done {
   }
 }
 
+.menu-btn {
+  text-align: center;
+  margin-top: 24px;
+}
+
+.close-icon {
+  margin-right: var(--margin);
+  cursor: pointer;
+  place-self: center end;
+  font-size: 3em;
+  font-weight: 400;
+  transform: rotate(45deg);
+}
+
+.menu-content {
+  background-color: var(--background);
+  visibility: hidden;
+  grid-template-rows: 1fr 8fr;
+  place-items: center;
+  width: 100dvw;
+  height: 100dvh;
+  display: grid;
+  position: fixed;
+  top: 0;
+  left: 0;
+}
+
+.menu-content.show {
+  visibility: visible;
+}
+
+.menu-content button#logout-btn {
+  width: clamp(200px, 50%, 100dvw);
+  height: 30px;
+  padding: 0;
+  font-size: 1.25em;
+}
+
 /*# sourceMappingURL=dashboard.83d9161e.css.map */

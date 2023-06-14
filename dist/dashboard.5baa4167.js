@@ -667,6 +667,15 @@ nonAuthPages = [
 (0, _auth.onAuthStateChanged)(auth, (user)=>{
     if (!user && !nonAuthPages.includes(window.location.pathname)) window.location.href = "index.html"; // User is not signed in
 });
+const moreBtn = document.querySelector(".menu-btn");
+const menuContent = document.querySelector(".menu-content");
+const closeIcon = document.querySelector(".close-icon");
+moreBtn.addEventListener("click", ()=>{
+    menuContent.classList.toggle("show");
+});
+closeIcon.addEventListener("click", ()=>{
+    menuContent.classList.toggle("show");
+});
 
 },{"firebase/app":"aM3Fo","firebase/auth":"79vzg","firebase/firestore":"8A4BC","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"aM3Fo":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");

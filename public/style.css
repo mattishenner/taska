@@ -383,3 +383,42 @@ p.done{
       transform: rotate(360deg)
     }
   }
+
+
+  /* Menu */
+  .menu-btn{
+    margin-top: 24px;
+    text-align: center;
+  }
+  .close-icon{
+    place-self: end;
+    align-self: center;
+    margin-right: var(--margin);
+    transform: rotate(45deg);
+    font-size: 3em;
+    cursor: pointer;
+    font-weight: 400;
+  }
+
+  .menu-content{
+    background-color: var(--background);
+    grid-template-rows: 1fr 8fr;
+    visibility: hidden;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100dvw;
+    height: 100dvh;
+    display: grid;
+    place-items: center;
+}
+.menu-content.show{
+    visibility: visible;
+}
+
+.menu-content button#logout-btn{
+    width: clamp(200px, 50%, 100dvw);
+    height: 30px;
+    padding: 0;
+    font-size: 1.25em;
+}

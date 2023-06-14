@@ -122,3 +122,15 @@ onAuthStateChanged(auth, (user) => {
       window.location.href = "index.html"; // User is not signed in
     }
 });
+
+
+const moreBtn = document.querySelector(".menu-btn");
+const menuContent = document.querySelector(".menu-content");
+const closeIcon = document.querySelector(".close-icon");
+
+moreBtn.addEventListener("click", () => {
+    menuContent.classList.toggle("show");
+});
+closeIcon.addEventListener("click", () => {
+    menuContent.classList.toggle("show");
+});

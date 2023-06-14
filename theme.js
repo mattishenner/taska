@@ -4,7 +4,6 @@ import { doc, setDoc, getDoc } from "firebase/firestore";
 
 const logo = document.querySelector('.logo');
 const rootElement = document.querySelector(':root');
-const rootStyles = getComputedStyle(rootElement);
 
 let currentThemeIndex = 0;
 
@@ -116,11 +115,15 @@ onAuthStateChanged(auth, async (user) => {
     if (user){
         const userDoc = doc(db, "users", auth.currentUser.uid);
         const userDocSnap = await getDoc(userDoc);
-        const userData = userDocSnap.data();
-        if (userData.theme) {
-            currentThemeIndex = userData.theme.lastTheme;
-            changeColor('--text', colorCombos[currentThemeIndex].text);
-            changeColor('--background', colorCombos[currentThemeIndex].background);
+        if (userDocSnap.exists()){
+            const userData = userDocSnap.data();
+            if (userData.theme) {
+                currentThemeIndex = userData.theme.lastTheme;
+                changeColor('--text', colorCombos[currentThemeIndex].text);
+                changeColor('--background', colorCombos[currentThemeIndex].background);
+            }
+        } else {
+            console.log("No preferred theme!");
         }
     }
 })
