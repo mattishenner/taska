@@ -4,13 +4,16 @@
     --white: #f9f9f9;
     --gray: #ececec;
     --black: #333;
-    --theme: #743cec;
+    --theme: #ff5900;
+    --green: #2ecc71;
     --high-priority: #ee591e;
     --medium-priority: #f1c40f;
     --low-priority: #3498db;
     --margin: 12px;
     --text: #000;
     --background: #f9f9f9;
+    --border-radius: 16px;
+    --box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.04);
 }
 
 body{
@@ -63,7 +66,6 @@ button{
 }
 input, textarea, button{
     font-size: 1em;
-    text-transform: uppercase;
 }
 
 header{
@@ -118,7 +120,6 @@ header button{
 .to-do-section{
     display: flex;
     flex-direction: column;
-    justify-content: center;
     gap: 10px;
     overflow-x: hidden;
     max-width: 100dvw;
@@ -151,33 +152,65 @@ header button{
     flex-direction: column;
     width: 100%;
     position: absolute;
-    top: 22vw;
     user-select: none;
 }
 
 .task-list li{
+    position: relative;
     display: flex;
     align-items: center;
-    padding-left: var(--margin);
     cursor: grabbing;
     max-width: 100dvw;
     overflow-x: hidden;
 }
 
+.delete-btn{
+    position: absolute;
+    border-radius: var(--border-radius);
+    right: var(--margin);
+    padding-right: var(--margin);
+    font-size: 0.875em;
+    font-weight: 500;
+    top: 0.5px;
+    margin: 0;
+    background-color: var(--black);
+    color: var(--white); 
+    height: calc(100% - var(--margin) - 1px);
+    display: flex;
+    align-items: center;
+    padding-left: 100px;
+}
+
+.task-container{
+    position: relative;
+    display: flex;
+    padding: calc(var(--margin) * 1.5) var(--margin);
+    background-color: white;
+    max-width: 100dvw;
+    width: 100%;
+    margin-left: var(--margin);
+    margin-right: var(--margin);
+    margin-bottom: var(--margin);
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+}
+
+/* .task-container:before{
+    content: "";
+    width: 1.5em;
+    height: 1.5em;
+    background-color: var(--theme);
+    right: var(--margin);
+    border-radius: 4px;
+    position: absolute;
+} */
+
+
 .task-list li p{
-    text-transform: uppercase;
-    font-size: 1.25em;
-    font-weight: 600;
+    font-size: 0.75em;
+    font-weight: 500;
     margin: 8px 0;
     line-height: 1.25;
-    /* word-break: break-all;
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-  
-  -webkit-hyphens: auto;
-     -moz-hyphens: auto;
-          hyphens: auto; */
-
     margin-right: 12px;
 }
 
@@ -188,7 +221,6 @@ header button{
     font-size: .65em;
     font-weight: 400;
     cursor: pointer;
-    text-transform: uppercase;
     align-self: flex-start;
     margin-top: 10px;
 }
@@ -196,7 +228,12 @@ header button{
 
 p.done{
     text-decoration: line-through;
+    opacity: .2;
 }
+.task-container:has(p.done){
+    background-color: var(--background);
+}
+
 
 #new-task-btn{
     margin-top: var(--margin);
@@ -281,7 +318,6 @@ p.done{
     background-color: var(--background);
     box-shadow: 0px -10px 30px rgba(0,0,0,.1);
     transform: translateY(100%);
-    text-transform: uppercase;
     transition: all .2s ease-in-out;
 }
 .input-area.show{
@@ -308,16 +344,16 @@ p.done{
 }
 .plus-btn.rotate{
     transform: translateX(-50%) rotate(225deg);
-    bottom: 200px;
+    bottom: 300px;
 }
 
 /* Sortable */
 .sortable-chosen{
     transform: scale(1.05);
-    background-color: var(--text);
-    color: var(--background);
 }
-
+.task-container:has(.sortable-chosen) ~ .delete-btn{
+    opacity: 0;
+}
 
 /* Loader */
 .d1, .d2{

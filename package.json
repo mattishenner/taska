@@ -16,7 +16,8 @@
     "hyphen": "^1.6.6",
     "ngrok": "^5.0.0-beta.2",
     "parcel": "^2.9.2",
-    "sortablejs": "^1.15.0"
+    "sortablejs": "^1.15.0",
+    "tinygesture": "^2.0.0"
   },
   "devDependencies": {
     "buffer": "^6.0.3",
