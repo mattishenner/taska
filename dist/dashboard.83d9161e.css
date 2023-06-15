@@ -5,9 +5,9 @@
   --black: #333;
   --theme: #ff5900;
   --green: #2ecc71;
-  --high-priority: #ee591e;
-  --medium-priority: #f1c40f;
-  --low-priority: #3498db;
+  --high-priority: #000;
+  --medium-priority: #707070;
+  --low-priority: #c3c3c3;
   --margin: 12px;
   --text: #000;
   --background: #f9f9f9;
@@ -58,10 +58,11 @@ body {
 
 button {
   cursor: pointer;
-  background-color: var(--text);
+  background-color: var(--high-priority);
   color: var(--background);
+  border-radius: var(--border-radius);
   border: none;
-  padding: 10px;
+  padding: 14px 10px;
 }
 
 input, textarea, button {
@@ -172,21 +173,27 @@ header button {
   overflow-x: hidden;
 }
 
-.delete-btn {
+.delete-btn, .edit-btn {
   border-radius: var(--border-radius);
   right: var(--margin);
   padding-right: var(--margin);
-  background-color: var(--black);
+  background-color: var(--high-priority);
   color: var(--white);
   height: calc(100% - var(--margin)  - 1px);
   align-items: center;
   margin: 0;
   padding-left: 100px;
-  font-size: .875em;
+  font-size: .75em;
   font-weight: 500;
   display: flex;
   position: absolute;
   top: .5px;
+}
+
+.edit-btn {
+  background-color: var(--medium-priority);
+  left: var(--margin);
+  padding-left: var(--margin);
 }
 
 .task-container {
@@ -229,11 +236,23 @@ p.done {
   background-color: var(--background);
 }
 
-#new-task-btn {
+#new-task-btn, #update-task-btn {
   margin-top: var(--margin);
-  background-color: var(--text);
+  background-color: var(--high-priority);
   color: var(--background);
-  font-weight: 600;
+  font-weight: 500;
+}
+
+#new-task-btn.hidden {
+  display: none;
+}
+
+#update-task-btn.show {
+  display: block;
+}
+
+#update-task-btn {
+  display: none;
 }
 
 #logout-btn {
@@ -248,9 +267,44 @@ p.done {
   margin-bottom: var(--margin);
   margin-top: var(--margin);
   flex-direction: column;
-  padding: 10px 30px;
   display: flex;
   position: relative;
+}
+
+#priority-options {
+  margin-bottom: var(--margin);
+  background-color: var(--gray);
+  box-sizing: border-box;
+  border-radius: 100px;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+  padding: 4px;
+  display: flex;
+}
+
+#priority-options.inactive {
+  opacity: .3;
+}
+
+#priority-options input[type="radio"] {
+  display: none;
+}
+
+#priority-options input[type="radio"] + label {
+  opacity: .3;
+  text-align: center;
+  border-radius: var(--border-radius);
+  width: 30%;
+  padding: 5px 0;
+  font-size: .75em;
+}
+
+#priority-options input[type="radio"]:checked + label {
+  opacity: 1;
+  color: #fff;
+  background-color: #000;
 }
 
 .priority-container input {
@@ -259,12 +313,14 @@ p.done {
 }
 
 ::placeholder {
-  color: var(--text);
+  color: var(--high-priority);
+  opacity: .3;
 }
 
 .priority-container input[type="range"] {
   -webkit-appearance: none;
-  background-color: var(--text);
+  background-color: var(--gray);
+  border-radius: var(--border-radius);
   outline: none;
   height: 5px;
   margin: 10px 0;
@@ -272,23 +328,24 @@ p.done {
 
 .priority-container input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
-  background-color: var(--text);
+  background-color: var(--high-priority);
   cursor: pointer;
+  border-radius: var(--border-radius);
   border: none;
   width: 20px;
   height: 20px;
 }
 
+.priority-switch {
+  align-items: center;
+  gap: 8px;
+  display: flex;
+}
+
 .priority-container h3 {
-  background-color: var(--background);
   margin: 0;
-  padding: 0 25px;
-  font-size: 1em;
+  font-size: .875em;
   font-weight: 400;
-  position: absolute;
-  top: -.65em;
-  left: 50%;
-  transform: translateX(-50%);
 }
 
 .priority-options {
@@ -303,16 +360,80 @@ p.done {
 }
 
 .priority-options p:first-of-type {
-  margin-left: 15%;
+  margin-left: 12%;
 }
 
 .priority-options p:last-of-type {
-  margin-right: 15%;
+  margin-right: 12%;
+}
+
+.high-priority > .task-container > p:after, .medium-priority > .task-container > p:after, .low-priority > .task-container > p:after {
+  content: "High";
+  background-color: var(--high-priority);
+  color: var(--white);
+  border-radius: 3px;
+  margin: 4px;
+  padding: 2px 4px;
+  font-size: .75em;
+  position: relative;
+  top: -6px;
+}
+
+.medium-priority > .task-container > p:after {
+  content: "Medium";
+  background-color: var(--medium-priority);
+}
+
+.low-priority > .task-container > p:after {
+  content: "Low";
+  background-color: var(--low-priority);
+}
+
+.switch {
+  width: 56px;
+  height: 28px;
+  margin: 0;
+  display: inline-block;
+  position: relative;
+}
+
+.switch input {
+  display: none;
+}
+
+.slider {
+  cursor: pointer;
+  background-color: #ccc;
+  border-radius: 100px;
+  transition: all .2s;
+  position: absolute;
+  inset: 0;
+}
+
+.slider:before {
+  content: "";
+  background-color: #fff;
+  border-radius: 100px;
+  width: 22px;
+  height: 22px;
+  transition: all .2s;
+  position: absolute;
+  bottom: 3px;
+  left: 3px;
+}
+
+input:checked + .slider {
+  background-color: var(--high-priority);
+}
+
+input:checked + .slider:before {
+  transform: translateX(26px);
 }
 
 .input-area {
   box-sizing: border-box;
   background-color: var(--background);
+  border-radius: var(--border-radius) var(--border-radius) 0 0;
   width: 100%;
   padding: 20px;
   transition: all .2s ease-in-out;
@@ -328,12 +449,15 @@ p.done {
 
 .plus-btn {
   cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
   border-radius: 50%;
   justify-content: center;
   align-items: center;
   width: 70px;
   height: 70px;
-  font-size: 3em;
+  font-size: 2.5em;
+  font-weight: 300;
   transition: all .2s ease-in-out;
   display: flex;
   position: fixed;
@@ -343,11 +467,13 @@ p.done {
 }
 
 .plus-btn p {
-  margin: 0 0 8px;
+  -webkit-user-select: none;
+  user-select: none;
+  margin: 0;
 }
 
 .plus-btn.rotate {
-  bottom: 300px;
+  bottom: 315px;
   transform: translateX(-50%)rotate(225deg);
 }
 
@@ -361,7 +487,7 @@ p.done {
 
 .d1, .d2 {
   background-color: #000;
-  border-radius: 0%;
+  border-radius: 50%;
   width: 40px;
   height: 40px;
 }
@@ -433,6 +559,7 @@ p.done {
 .menu-btn {
   text-align: center;
   margin-top: 24px;
+  font-size: .875em;
 }
 
 .close-icon {
@@ -465,7 +592,7 @@ p.done {
   width: clamp(200px, 50%, 100dvw);
   height: 30px;
   padding: 0;
-  font-size: 1.25em;
+  font-size: 1em;
 }
 
 /*# sourceMappingURL=dashboard.83d9161e.css.map */

@@ -6,9 +6,9 @@
     --black: #333;
     --theme: #ff5900;
     --green: #2ecc71;
-    --high-priority: #ee591e;
-    --medium-priority: #f1c40f;
-    --low-priority: #3498db;
+    --high-priority: #000;
+    --medium-priority: #707070;
+    --low-priority: #c3c3c3;
     --margin: 12px;
     --text: #000;
     --background: #f9f9f9;
@@ -60,9 +60,10 @@ body{
 button{
     cursor: pointer;
     border: none;
-    padding: 10px 10px;
-    background-color: var(--text);
+    padding: 14px 10px;
+    background-color: var(--high-priority);
     color: var(--background);
+    border-radius: var(--border-radius);
 }
 input, textarea, button{
     font-size: 1em;
@@ -164,21 +165,26 @@ header button{
     overflow-x: hidden;
 }
 
-.delete-btn{
+.delete-btn, .edit-btn{
     position: absolute;
     border-radius: var(--border-radius);
     right: var(--margin);
     padding-right: var(--margin);
-    font-size: 0.875em;
+    font-size: 0.75em;
     font-weight: 500;
     top: 0.5px;
     margin: 0;
-    background-color: var(--black);
+    background-color: var(--high-priority);
     color: var(--white); 
     height: calc(100% - var(--margin) - 1px);
     display: flex;
     align-items: center;
     padding-left: 100px;
+}
+.edit-btn{
+    background-color: var(--medium-priority);
+    left: var(--margin);
+    padding-left: var(--margin);
 }
 
 .task-container{
@@ -235,11 +241,20 @@ p.done{
 }
 
 
-#new-task-btn{
+#new-task-btn, #update-task-btn{
     margin-top: var(--margin);
-    background-color: var(--text);
+    background-color: var(--high-priority);
     color: var(--background);
-    font-weight: 600;
+    font-weight: 500;
+}
+#new-task-btn.hidden{
+    display: none;
+}
+#update-task-btn.show{
+    display: block;
+}
+#update-task-btn{
+    display: none;
 }
 #logout-btn{
     margin-top: var(--margin);
@@ -255,43 +270,82 @@ p.done{
 .priority-container{
     display: flex;
     flex-direction: column;
-    padding: 10px 30px;
     position: relative;
     margin-bottom: var(--margin);
     margin-top: var(--margin);
 }
+
+
+#priority-options{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--margin);
+    flex-direction: row;
+    padding: 4px;
+    background-color: var(--gray);
+    margin-top: 8px;
+    box-sizing: border-box;
+    border-radius: 100px;
+}
+#priority-options.inactive{
+    opacity: .3;
+}
+#priority-options input[type="radio"]{
+    display: none;
+}
+#priority-options input[type="radio"] + label{
+    opacity: .3;
+    width: 30%;
+    padding: 5px 0;
+    text-align: center;
+    border-radius: var(--border-radius);
+    font-size: .75em;
+}
+#priority-options input[type="radio"]:checked + label{
+    opacity: 1;
+    color: white;
+    background-color: #000;
+}
+
+
+
 .priority-container input{
     padding-left: 15%;
     padding-right: 15%;
 }
 ::placeholder{
-    color: var(--text);
+    color: var(--high-priority);
+    opacity: .3;
+    
 }
 .priority-container input[type="range"]{
     -webkit-appearance: none;
     height: 5px;
-    background-color: var(--text);
+    background-color: var(--gray);
     outline: none;
+    border-radius: var(--border-radius);
     margin: 10px 0;
 }
 .priority-container input[type="range"]::-webkit-slider-thumb{
     -webkit-appearance: none;
     width: 20px;
     height: 20px;
-    background-color: var(--text);
+    background-color: var(--high-priority);
     cursor: pointer;
+    border-radius: var(--border-radius);
     border: none;
 }
 
+.priority-switch{
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
 .priority-container h3{
-    position: absolute;
     margin: 0;
-    top: -.65em;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: var(--background);
-    padding: 0 25px;
-    font-size: 1em;
+    font-size: .875em;
     font-weight: 400;
 }
 .priority-options{
@@ -304,11 +358,77 @@ p.done{
     opacity: .4;
 }
 .priority-options p:first-of-type{
-    margin-left: 15%;
+    margin-left: 12%;
 }
 .priority-options p:last-of-type{
-    margin-right: 15%;
+    margin-right: 12%;
 }
+.high-priority > .task-container > p::after, 
+.medium-priority > .task-container > p::after, 
+.low-priority > .task-container > p::after{
+    content: "High";
+    font-size: .75em;
+    position: relative;
+    top: -6px;
+    background-color: var(--high-priority);
+    margin: 4px;
+    padding: 2px 4px;
+    border-radius: 3px;
+    color: var(--white);
+}
+.medium-priority > .task-container > p::after{
+    content: "Medium";
+    background-color: var(--medium-priority);
+}
+.low-priority > .task-container > p::after{
+    content: "Low";
+    background-color: var(--low-priority);
+}
+
+
+/* Switch */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 56px;
+    height: 28px;
+    margin: 0;
+}
+.switch input {
+    display: none;
+}
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .2s;
+    border-radius: 100px;
+}
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 22px;
+    width: 22px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .2s;
+    border-radius: 100px;
+}
+input:checked+.slider {
+    background-color: var(--high-priority);
+}
+input:checked+.slider:before {
+    transform: translateX(26px);
+}
+
+
+
+
 .input-area{
     position: fixed;
     bottom: 0;
@@ -319,6 +439,7 @@ p.done{
     box-shadow: 0px -10px 30px rgba(0,0,0,.1);
     transform: translateY(100%);
     transition: all .2s ease-in-out;
+    border-radius: var(--border-radius) var(--border-radius) 0 0;
 }
 .input-area.show{
     transform: translateY(0);
@@ -329,7 +450,8 @@ p.done{
     bottom: 12px;
     left: 50%;
     transform: translateX(-50%);
-    font-size: 3em;
+    font-size: 2.5em;
+    font-weight: 300;
     width: 70px;
     height: 70px;
     display: flex;
@@ -338,13 +460,15 @@ p.done{
     border-radius: 50%;
     cursor: pointer;
     transition: all .2s ease-in-out;
+    user-select: none;
 }
 .plus-btn p{
-    margin: 0 0 8px 0;
+    user-select: none;
+    margin: 0;
 }
 .plus-btn.rotate{
     transform: translateX(-50%) rotate(225deg);
-    bottom: 300px;
+    bottom: 315px;
 }
 
 /* Sortable */
@@ -357,7 +481,7 @@ p.done{
 
 /* Loader */
 .d1, .d2{
-    border-radius: 0%;
+    border-radius: 50%;
     height: 40px;
     width: 40px;
     background-color: black;
@@ -423,6 +547,7 @@ p.done{
 
   /* Menu */
   .menu-btn{
+    font-size: .875em;
     margin-top: 24px;
     text-align: center;
   }
@@ -456,5 +581,5 @@ p.done{
     width: clamp(200px, 50%, 100dvw);
     height: 30px;
     padding: 0;
-    font-size: 1.25em;
+    font-size: 1em;
 }

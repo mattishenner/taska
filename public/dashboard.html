@@ -22,19 +22,35 @@
         <div class="input-area">
             <input id="new-task-input" type="text" placeholder="Type task here...">
             <div class="priority-container">
-                <h3>Priority</h3>
-                <div class="priority-options">
-                    <p>Low</p>
-                    <p>Medium</p>
-                    <p>High</p>
+                <div class="priority-switch">
+                    <h3>Priority</h3>
+                    <label class="switch">
+                        <input type="checkbox" id="priority-checkbox">
+                        <span class="slider"></span>
+                    </label>
                 </div>
-                <input type="range" min="1" max="3" id="priority-slider">
+
+                <form id="priority-options" class="inactive">
+                    <input type="radio" id="low-priority" name="priority" value="1">
+                    <label for="low-priority">Low</label>
+                
+                    <input type="radio" id="medium-priority" name="priority" value="2">
+                    <label for="medium-priority">Medium</label>
+
+                    <input type="radio" id="high-priority" name="priority" value="3">
+                    <label for="high-priority">High</label>
+                </form>
+
+                <div class="priority-options">
+                </div>
+                <input type="range" min="0" max="3" value="0" id="priority-slider" style="display: none;">
             </div>
             <form>
                 <button id="new-task-btn">Add</button>
+                <button id="update-task-btn">Update</button>
             </form>
 
-            <div class="menu-btn">More</div>
+            <div class="menu-btn">Options</div>
         </div>
         <div class="menu-content">
             <div class="close-icon">+</div>

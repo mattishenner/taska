@@ -591,6 +591,13 @@ const loader = document.querySelector(".load-container");
         const newTaskBtn = document.getElementById("new-task-btn");
         const taskList = document.querySelector(".task-list");
         const prioritySlider = document.getElementById("priority-slider");
+        const prioritySwitch = document.getElementById("priority-checkbox");
+        const priorityOptionsContainer = document.getElementById("priority-options");
+        const lowPriorityCheckbox = document.getElementById("low-priority");
+        const mediumPriorityCheckbox = document.getElementById("medium-priority");
+        const highPriorityCheckbox = document.getElementById("high-priority");
+        const updateTaskBtn = document.getElementById("update-task-btn");
+        let currentlyEdditingTaskId = null;
         //Get tasks from firestore
         async function getTasks() {
             loader.classList.remove("hidden");
@@ -637,9 +644,6 @@ const loader = document.querySelector(".load-container");
                 const li = document.createElement("li");
                 li.id = task.id;
                 const innerText = document.createElement("p");
-                const delBtn = document.createElement("h4");
-                delBtn.innerText = "Delete";
-                delBtn.classList.add("delete-btn");
                 container.classList.add("task-container");
                 innerText.innerText = task.task;
                 if (task.done) {
@@ -649,7 +653,24 @@ const loader = document.querySelector(".load-container");
                 if (task.priority === 3) li.classList.add("high-priority");
                 else if (task.priority === 2) li.classList.add("medium-priority");
                 else if (task.priority === 1) li.classList.add("low-priority");
+                else if (task.priority === 0) li.classList.add("no-priority");
+                //Edit task
+                const editBtn = document.createElement("h4");
+                editBtn.innerText = "Edit";
+                editBtn.classList.add("edit-btn");
+                editBtn.addEventListener("click", (event)=>{
+                    event.stopPropagation();
+                    openInputArea();
+                    newTaskInput.value = task.task;
+                    prioritySlider.value = task.priority;
+                    newTaskBtn.classList.add("hidden");
+                    updateTaskBtn.classList.add("show");
+                    currentlyEdditingTaskId = task.id;
+                });
                 //Delete task
+                const delBtn = document.createElement("h4");
+                delBtn.innerText = "Remove";
+                delBtn.classList.add("delete-btn");
                 delBtn.addEventListener("click", (event)=>{
                     event.stopPropagation();
                     const taskRef = (0, _firestore.doc)((0, _appJs.db), "users", (0, _appJs.auth).currentUser.uid, "tasks", task.id);
@@ -660,26 +681,41 @@ const loader = document.querySelector(".load-container");
                         console.error("Error removing document: ", error);
                     });
                 });
-                //Add event listener to each task
-                // li.addEventListener('click', async () => {
-                //     task.done = !task.done;
-                //     renderTasks();
-                //     if (task.done) {
-                //         task.completedDate = new Date();
-                //         const taskRef = doc(db, "users", auth.currentUser.uid, "tasks", task.id);
-                //         await updateDoc(taskRef, { done: task.done, completedDate: task.completedDate })
-                //     } else {
-                //         task.completedDate = null;
-                //         const taskRef = doc(db, "users", auth.currentUser.uid, "tasks", task.id);
-                //         await updateDoc(taskRef, { done: task.done, completedDate: task.completedDate })
-                //     }
-                // });
                 container.appendChild(innerText);
+                li.appendChild(editBtn);
                 li.appendChild(delBtn);
                 li.appendChild(container);
                 taskList.appendChild(li);
                 initSlider(container, li);
             });
+        }
+        //Update task
+        updateTaskBtn.addEventListener("click", (event)=>{
+            event.preventDefault();
+            updateTask();
+            openInputArea();
+        });
+        async function updateTask() {
+            if (!currentlyEdditingTaskId) return;
+            const taskRef = (0, _firestore.doc)((0, _appJs.db), "users", (0, _appJs.auth).currentUser.uid, "tasks", currentlyEdditingTaskId);
+            //First update local task array
+            let taskToUpdate = taskArray.find((task)=>task.id === currentlyEdditingTaskId);
+            if (taskToUpdate) {
+                taskToUpdate.task = newTaskInput.value;
+                taskToUpdate.priority = Number(prioritySlider.value);
+            }
+            const batch = (0, _firestore.writeBatch)((0, _appJs.db));
+            try {
+                batch.update(taskRef, {
+                    task: newTaskInput.value,
+                    priority: Number(prioritySlider.value)
+                });
+                batch.commit(batch);
+            } catch (error) {
+                console.log(error);
+            }
+            renderTasks();
+            currentlyEdditingTaskId = null;
         }
         //Create new task
         newTaskBtn?.addEventListener("click", async (event)=>{
@@ -717,12 +753,43 @@ const loader = document.querySelector(".load-container");
         const plusBtn = document.querySelector(".plus-btn");
         const inputArea = document.querySelector(".input-area");
         let inputAreaOpen = false;
-        plusBtn.addEventListener("click", ()=>{
+        function openInputArea() {
+            updateTaskBtn.classList.remove("show");
+            newTaskBtn.classList.remove("hidden");
             inputAreaOpen = !inputAreaOpen;
             inputArea.classList.toggle("show");
             if (inputAreaOpen === true) newTaskInput.focus();
-            else newTaskInput.blur();
+            else {
+                newTaskInput.blur();
+                newTaskInput.value = "";
+            }
             plusBtn.classList.toggle("rotate");
+        }
+        plusBtn.addEventListener("click", ()=>{
+            openInputArea();
+        });
+        //Priorities
+        prioritySwitch.addEventListener("change", ()=>{
+            if (prioritySwitch.checked) {
+                priorityOptionsContainer.classList.remove("inactive");
+                prioritySlider.value = 2;
+                mediumPriorityCheckbox.checked = true;
+            } else {
+                priorityOptionsContainer.classList.add("inactive");
+                prioritySlider.value = 0;
+                lowPriorityCheckbox.checked = false;
+                mediumPriorityCheckbox.checked = false;
+                highPriorityCheckbox.checked = false;
+            }
+        });
+        lowPriorityCheckbox.addEventListener("click", ()=>{
+            prioritySlider.value = 1;
+        });
+        mediumPriorityCheckbox.addEventListener("click", ()=>{
+            prioritySlider.value = 2;
+        });
+        highPriorityCheckbox.addEventListener("click", ()=>{
+            prioritySlider.value = 3;
         });
         //Update index of tasks function
         async function updateIndex() {
@@ -765,6 +832,7 @@ const loader = document.querySelector(".load-container");
             let startOffset = 0;
             const decelerationOnOverflow = 4;
             const revealWidth = 73;
+            const revealWidthLeft = 48;
             const snapWidth = revealWidth / 1.5;
             let swipeDirection = "neutral";
             let position = "neutral";
@@ -790,28 +858,21 @@ const loader = document.querySelector(".load-container");
                 function getX(x) {
                     if (x < revealWidth && x > -revealWidth) {
                         swipeDirection = x < 0 ? "left" : "right";
-                        console.log(x);
                         return x;
                     }
                     if (x < -revealWidth) {
                         swipeDirection = "left";
-                        console.log(x);
                         return (x + revealWidth) / decelerationOnOverflow - revealWidth;
                     }
-                    if (x > revealWidth) {
+                    if (x > revealWidthLeft) {
                         swipeDirection = "right";
-                        console.log(x);
-                        return (x - revealWidth) / decelerationOnOverflow + revealWidth;
+                        return (x - revealWidthLeft) / decelerationOnOverflow + revealWidthLeft;
                     }
-                    console.log(x);
                     return 0;
                 }
                 newX = getX(startOffset + gesture.touchMoveX);
-                console.log("startOffset", startOffset);
-                console.log("gesture.touchMoveX", gesture.touchMoveX);
-                console.log("newX", newX);
                 target.style.transform = "translateX(" + newX + "px)";
-                if (newX >= snapWidth || newX <= -snapWidth) swiped = newX < 0 ? -revealWidth : revealWidth;
+                if (newX >= snapWidth || newX <= -snapWidth) swiped = newX < 0 ? -revealWidth : revealWidthLeft;
                 target.style.transition = null;
             });
             gesture.on("panend", ()=>{
@@ -833,7 +894,6 @@ const loader = document.querySelector(".load-container");
                     position = "neutral";
                 } else {
                     startOffset = swiped;
-                    console.log("startOffset", startOffset);
                     target.style.transform = "translateX(" + swiped + "px)";
                     position = swipeDirection === "left" ? "left" : "right";
                 }
@@ -878,11 +938,10 @@ const loader = document.querySelector(".load-container");
                 target.style.transform = null;
             });
         }
-    ////END OF if(user)
     }
 });
 
-},{"firebase/firestore":"8A4BC","./app.js":"igcvL","@firebase/auth":"khbwD","sortablejs":"4mik1","hyphen/en":"9KDn5","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","tinygesture":"hBvzf"}],"4mik1":[function(require,module,exports) {
+},{"firebase/firestore":"8A4BC","./app.js":"igcvL","@firebase/auth":"khbwD","sortablejs":"4mik1","hyphen/en":"9KDn5","tinygesture":"hBvzf","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"4mik1":[function(require,module,exports) {
 /**!
  * Sortable 1.15.0
  * @author	RubaXa   <trash@rubaxa.org>

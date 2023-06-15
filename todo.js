@@ -14,6 +14,13 @@ onAuthStateChanged(auth, (user) => {
         const newTaskBtn = document.getElementById('new-task-btn');
         const taskList = document.querySelector('.task-list');
         const prioritySlider = document.getElementById('priority-slider');
+        const prioritySwitch = document.getElementById('priority-checkbox');
+        const priorityOptionsContainer = document.getElementById('priority-options');
+        const lowPriorityCheckbox = document.getElementById('low-priority');
+        const mediumPriorityCheckbox = document.getElementById('medium-priority');
+        const highPriorityCheckbox = document.getElementById('high-priority');
+        const updateTaskBtn = document.getElementById('update-task-btn');
+        let currentlyEdditingTaskId = null;
 
         //Get tasks from firestore
         async function getTasks() {
@@ -75,9 +82,7 @@ onAuthStateChanged(auth, (user) => {
                 const li = document.createElement('li');
                 li.id = task.id;
                 const innerText = document.createElement('p');
-                const delBtn = document.createElement('h4');
-                delBtn.innerText = "Delete";
-                delBtn.classList.add('delete-btn');
+
 
                 container.classList.add('task-container');
 
@@ -94,10 +99,28 @@ onAuthStateChanged(auth, (user) => {
                     li.classList.add('medium-priority');
                 } else if (task.priority === 1) {
                     li.classList.add('low-priority');
+                } else if (task.priority === 0) {
+                    li.classList.add('no-priority');
                 }
 
+                //Edit task
+                const editBtn = document.createElement('h4');
+                editBtn.innerText = "Edit";
+                editBtn.classList.add('edit-btn');
+                editBtn.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                    openInputArea();
+                    newTaskInput.value = task.task;
+                    prioritySlider.value = task.priority;
+                    newTaskBtn.classList.add('hidden');
+                    updateTaskBtn.classList.add('show');
+                    currentlyEdditingTaskId = task.id;
+                });
 
                 //Delete task
+                const delBtn = document.createElement('h4');
+                delBtn.innerText = "Remove";
+                delBtn.classList.add('delete-btn');
                 delBtn.addEventListener('click', (event) => {
                     event.stopPropagation();
 
@@ -115,27 +138,49 @@ onAuthStateChanged(auth, (user) => {
                         })
                 });
 
-                //Add event listener to each task
-                // li.addEventListener('click', async () => {
-                //     task.done = !task.done;
-                //     renderTasks();
-                //     if (task.done) {
-                //         task.completedDate = new Date();
-                //         const taskRef = doc(db, "users", auth.currentUser.uid, "tasks", task.id);
-                //         await updateDoc(taskRef, { done: task.done, completedDate: task.completedDate })
-                //     } else {
-                //         task.completedDate = null;
-                //         const taskRef = doc(db, "users", auth.currentUser.uid, "tasks", task.id);
-                //         await updateDoc(taskRef, { done: task.done, completedDate: task.completedDate })
-                //     }
-                // });
                 container.appendChild(innerText);
+                li.appendChild(editBtn);
                 li.appendChild(delBtn);
                 li.appendChild(container);
                 taskList.appendChild(li);
 
                 initSlider(container, li);
             });
+        }
+
+        //Update task
+        updateTaskBtn.addEventListener('click', (event) => {
+            event.preventDefault();
+            updateTask();
+            openInputArea();
+        });
+
+        async function updateTask() {
+            if (!currentlyEdditingTaskId){
+                return;
+            }
+
+            const taskRef = doc(db, "users", auth.currentUser.uid, "tasks", currentlyEdditingTaskId);
+
+            //First update local task array
+            let taskToUpdate = taskArray.find(task => task.id === currentlyEdditingTaskId);
+            if (taskToUpdate) {
+                taskToUpdate.task = newTaskInput.value;
+                taskToUpdate.priority = Number(prioritySlider.value);
+            }
+
+            const batch = writeBatch(db);
+            try {
+                batch.update(taskRef, {
+                    task: newTaskInput.value,
+                    priority: Number(prioritySlider.value)
+                });
+                batch.commit(batch);
+            } catch (error) {
+                console.log(error);
+            }
+            renderTasks();
+            currentlyEdditingTaskId = null;
         }
 
 
@@ -184,15 +229,46 @@ onAuthStateChanged(auth, (user) => {
         const inputArea = document.querySelector('.input-area');
         let inputAreaOpen = false;
 
-        plusBtn.addEventListener('click', () => {
+        function openInputArea() {
+            updateTaskBtn.classList.remove('show');
+            newTaskBtn.classList.remove('hidden');
             inputAreaOpen = !inputAreaOpen;
             inputArea.classList.toggle('show');
             if (inputAreaOpen === true) {
                 newTaskInput.focus();
             } else {
                 newTaskInput.blur();
+                newTaskInput.value = '';
             }
             plusBtn.classList.toggle('rotate');
+        }
+
+        plusBtn.addEventListener('click', () => {
+            openInputArea();
+        });
+
+        //Priorities
+        prioritySwitch.addEventListener('change', () => {
+            if (prioritySwitch.checked) {
+                priorityOptionsContainer.classList.remove('inactive');
+                prioritySlider.value = 2;
+                mediumPriorityCheckbox.checked = true;
+            } else {
+                priorityOptionsContainer.classList.add('inactive');
+                prioritySlider.value = 0;
+                lowPriorityCheckbox.checked = false;
+                mediumPriorityCheckbox.checked = false;
+                highPriorityCheckbox.checked = false;
+            }
+        });
+        lowPriorityCheckbox.addEventListener('click', () => {
+            prioritySlider.value = 1;
+        });
+        mediumPriorityCheckbox.addEventListener('click', () => {
+            prioritySlider.value = 2;
+        });
+        highPriorityCheckbox.addEventListener('click', () => {
+            prioritySlider.value = 3;
         });
 
         //Update index of tasks function
@@ -239,8 +315,9 @@ onAuthStateChanged(auth, (user) => {
             let startOffset = 0;
             const decelerationOnOverflow = 4;
             const revealWidth = 73;
+            const revealWidthLeft = 48;
             const snapWidth = revealWidth / 1.5;
-            let swipeDirection = "neutral"; 
+            let swipeDirection = "neutral";
             let position = "neutral";
             let newX = startOffset;
 
@@ -269,31 +346,24 @@ onAuthStateChanged(auth, (user) => {
                 function getX(x) {
                     if (x < revealWidth && x > -revealWidth) {
                         swipeDirection = x < 0 ? "left" : "right";
-                        console.log(x);
                         return x;
                     }
                     if (x < -revealWidth) {
                         swipeDirection = "left";
-                        console.log(x);
                         return (x + revealWidth) / decelerationOnOverflow - revealWidth;
                     }
-                    if (x > revealWidth) {
+                    if (x > revealWidthLeft) {
                         swipeDirection = "right";
-                        console.log(x);
-                        return (x - revealWidth) / decelerationOnOverflow + revealWidth;
+                        return (x - revealWidthLeft) / decelerationOnOverflow + revealWidthLeft;
                     }
-                    console.log(x);
                     return 0;
                 };
 
-                newX = getX(startOffset + gesture.touchMoveX);  
-                console.log("startOffset", startOffset);
-                console.log("gesture.touchMoveX", gesture.touchMoveX);
-                console.log("newX", newX); 
-                              
+                newX = getX(startOffset + gesture.touchMoveX);
+
                 target.style.transform = "translateX(" + newX + "px)";
                 if (newX >= snapWidth || newX <= -snapWidth) {
-                    swiped = newX < 0 ? -revealWidth : revealWidth;
+                    swiped = newX < 0 ? -revealWidth : revealWidthLeft;
                 }
                 target.style.transition = null;
             });
@@ -316,13 +386,12 @@ onAuthStateChanged(auth, (user) => {
                     startOffset = 0;
                     target.style.transform = null;
                     position = "neutral";
-                } else if (swipeDirection === "right" && position === "left"){
+                } else if (swipeDirection === "right" && position === "left") {
                     startOffset = 0;
                     target.style.transform = null;
                     position = "neutral";
                 } else {
                     startOffset = swiped;
-                    console.log("startOffset", startOffset);
                     target.style.transform = "translateX(" + swiped + "px)";
                     position = swipeDirection === "left" ? "left" : "right";
                 }
@@ -362,17 +431,6 @@ onAuthStateChanged(auth, (user) => {
                 startOffset = 0;
                 target.style.transform = null;
             });
-
-
-
-
         }
-
-        ////END OF if(user)
     }
 });
-
-
-
-
-
