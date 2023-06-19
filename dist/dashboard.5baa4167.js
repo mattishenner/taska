@@ -602,19 +602,19 @@ const authBtn = document.getElementById("auth-btn");
 const googleBtn = document.getElementById("google-btn");
 let signUp = true;
 function switchForms() {
-    console.log("switching forms");
+    signUp = !signUp;
     repeatPassword.classList.toggle("hidden");
     if (signUp) {
         switchText.innerText = "Already have an account?";
         switchBtn.innerText = "Sign in";
-        authBtn.innerText = "Sign in";
+        authBtn.innerText = "Sign Up";
     } else {
         switchText.innerText = "Don't have an account yet?";
         switchBtn.innerText = "Sign up";
-        authBtn.innerText = "Sign up";
+        authBtn.innerText = "Sign In";
     }
-    signUp = !signUp;
 }
+if (window.location.href.includes("index")) switchForms();
 if (switchBtn) switchBtn.addEventListener("click", switchForms);
 //Authenticate users
 if (authBtn) authBtn.addEventListener("click", (event)=>{
@@ -624,15 +624,19 @@ if (authBtn) authBtn.addEventListener("click", (event)=>{
     const repeatPassword = document.getElementById("repeat-password-input").value;
     //Create new user:
     if (signUp) {
-        if (password === repeatPassword) (0, _auth.createUserWithEmailAndPassword)(auth, email, password).then((userCredential)=>{
-            console.log("Signed up");
+        if (password === repeatPassword) (0, _auth.createUserWithEmailAndPassword)(auth, email, password).then(async (userCredential)=>{
+            const user = userCredential.user;
+            //Create new user doc 
+            const userRef = (0, _firestore.doc)(db, "users", user.uid);
+            await (0, _firestore.setDoc)(userRef, {
+                hasBeenWelcomed: false
+            });
             window.location.href = "dashboard.html";
         }).catch((error)=>{
             console.log("error", error);
         });
         else window.alert("Passwords don't match :(");
     } else (0, _auth.signInWithEmailAndPassword)(auth, email, password).then((userCredential)=>{
-        console.log("Signed in");
         window.location.href = "dashboard.html";
     }).catch((error)=>{
         console.log("error", error);
@@ -642,8 +646,13 @@ if (authBtn) authBtn.addEventListener("click", (event)=>{
 if (googleBtn) googleBtn.addEventListener("click", (event)=>{
     event.preventDefault();
     const provider = new (0, _auth.GoogleAuthProvider)();
-    (0, _auth.signInWithPopup)(auth, provider).then((result)=>{
-        console.log("Signed in with Google");
+    (0, _auth.signInWithPopup)(auth, provider).then(async (userCredential)=>{
+        const user = userCredential.user;
+        const userRef = (0, _firestore.doc)(db, "users", user.uid);
+        const docSnap = await (0, _firestore.getDoc)(userRef);
+        if (!docSnap.exists()) await (0, _firestore.setDoc)(userRef, {
+            hasBeenWelcomed: false
+        });
         window.location.href = "dashboard.html";
     }).catch((error)=>{
         console.log("error", error);
@@ -652,9 +661,7 @@ if (googleBtn) googleBtn.addEventListener("click", (event)=>{
 //Log out
 const logoutBtn = document.getElementById("logout-btn");
 if (logoutBtn) logoutBtn.addEventListener("click", (event)=>{
-    (0, _auth.signOut)(auth).then(()=>{
-        console.log("Signed out");
-    }).catch((error)=>{
+    (0, _auth.signOut)(auth).catch((error)=>{
         console.log("error", error);
     });
 });
@@ -670,10 +677,10 @@ nonAuthPages = [
 const moreBtn = document.querySelector(".menu-btn");
 const menuContent = document.querySelector(".menu-content");
 const closeIcon = document.querySelector(".close-icon");
-moreBtn.addEventListener("click", ()=>{
+moreBtn?.addEventListener("click", ()=>{
     menuContent.classList.toggle("show");
 });
-closeIcon.addEventListener("click", ()=>{
+closeIcon?.addEventListener("click", ()=>{
     menuContent.classList.toggle("show");
 });
 

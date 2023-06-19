@@ -2,6 +2,8 @@
 :root {
   --white: #f9f9f9;
   --gray: #ececec;
+  --input-background: #e9e7e5;
+  --input-color: #000;
   --black: #333;
   --theme: #ff5900;
   --green: #2ecc71;
@@ -10,14 +12,16 @@
   --low-priority: #c3c3c3;
   --margin: 12px;
   --text: #000;
-  --background: #f9f9f9;
+  --background: #ebebeb;
   --border-radius: 16px;
   --box-shadow: 0px 0px 15px #0000000a;
+  --logo-filter: invert(0%) sepia(4%) saturate(7500%) hue-rotate(191deg) brightness(106%) contrast(104%);
 }
 
 body {
   color: var(--text);
   background-color: var(--background);
+  text-transform: uppercase;
   margin: 0;
   font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, Open Sans, Helvetica Neue, sans-serif;
   font-size: 19px;
@@ -38,14 +42,19 @@ body {
 }
 
 .auth-form input {
+  text-transform: none;
   box-sizing: border-box;
   background-color: #0000;
   border: none;
-  border-bottom: 3px solid #000;
+  border-bottom: 2px solid #000;
   border-radius: 0;
   width: 100%;
   padding: 10px 0;
   position: relative;
+}
+
+.auth-form input::placeholder {
+  opacity: .3;
 }
 
 .login header h2 {
@@ -60,20 +69,46 @@ button {
   cursor: pointer;
   background-color: var(--high-priority);
   color: var(--background);
-  border-radius: var(--border-radius);
   border: none;
+  border-radius: 100px;
   padding: 14px 10px;
 }
 
+#auth-btn {
+  color: #fff;
+}
+
+#google-btn {
+  background-color: #fff;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  display: flex;
+}
+
+#google-btn img {
+  width: 1em;
+  position: relative;
+  top: -1px;
+}
+
 input, textarea, button {
+  text-transform: uppercase;
+  color: var(--text);
   font-size: 1em;
 }
 
 header {
   padding: 0 var(--margin);
-  position: sticky;
-  top: 0;
   overflow: hidden;
+}
+
+.logo {
+  padding: var(--margin) calc(var(--margin) * 1.5) var(--margin) var(--margin);
+  box-sizing: border-box;
+  color: var(--text);
+  width: 100%;
+  max-width: 700px;
 }
 
 header h2 {
@@ -100,20 +135,20 @@ header button {
   display: flex;
 }
 
-.switch {
+.switch-login {
   text-align: center;
   margin-top: 20px;
 }
 
-.switch p {
+.switch-login p {
   margin: 0;
 }
 
-.switch p:first-of-type {
+.switch-login p:first-of-type {
   opacity: .4;
 }
 
-.switch p:last-of-type {
+.switch-login p:last-of-type {
   cursor: pointer;
   font-weight: 600;
 }
@@ -174,11 +209,9 @@ header button {
 }
 
 .delete-btn, .edit-btn {
-  border-radius: var(--border-radius);
-  right: var(--margin);
+  background-color: var(--text);
   padding-right: var(--margin);
-  background-color: var(--high-priority);
-  color: var(--white);
+  color: var(--background);
   height: calc(100% - var(--margin)  - 1px);
   align-items: center;
   margin: 0;
@@ -188,32 +221,43 @@ header button {
   display: flex;
   position: absolute;
   top: .5px;
+  right: 0;
 }
 
 .edit-btn {
-  background-color: var(--medium-priority);
-  left: var(--margin);
   padding-left: var(--margin);
+  left: 0;
 }
 
 .task-container {
-  padding: calc(var(--margin) * 1.5) var(--margin);
-  margin-left: var(--margin);
-  margin-right: var(--margin);
-  margin-bottom: var(--margin);
-  border-radius: var(--border-radius);
-  box-shadow: var(--box-shadow);
-  background-color: #fff;
+  background-color: var(--background);
+  padding-left: var(--margin);
+  padding-right: var(--margin);
+  align-items: center;
   width: 100%;
   max-width: 100dvw;
   display: flex;
   position: relative;
 }
 
+.task-container:before {
+  content: "✺";
+  color: var(--text);
+  margin-right: var(--margin);
+  font-size: 1.75em;
+  display: inline-block;
+  position: absolute;
+  top: 4px;
+}
+
+.task-container p {
+  padding-left: 1.5em;
+}
+
 .task-list li p {
   margin: 8px 12px 8px 0;
-  font-size: .75em;
-  font-weight: 500;
+  font-size: 1.25em;
+  font-weight: 600;
   line-height: 1.25;
 }
 
@@ -239,7 +283,7 @@ p.done {
 #new-task-btn, #update-task-btn {
   margin-top: var(--margin);
   background-color: var(--high-priority);
-  color: var(--background);
+  color: var(--input-background);
   font-weight: 500;
 }
 
@@ -273,8 +317,10 @@ p.done {
 
 #priority-options {
   margin-bottom: var(--margin);
-  background-color: var(--gray);
+  color: var(--input-background);
+  background-color: var(--input-color);
   box-sizing: border-box;
+  transform: all .3s ease-in-out;
   border-radius: 100px;
   flex-direction: row;
   justify-content: space-between;
@@ -285,7 +331,8 @@ p.done {
 }
 
 #priority-options.inactive {
-  opacity: .3;
+  opacity: .2;
+  pointer-events: none;
 }
 
 #priority-options input[type="radio"] {
@@ -293,7 +340,6 @@ p.done {
 }
 
 #priority-options input[type="radio"] + label {
-  opacity: .3;
   text-align: center;
   border-radius: var(--border-radius);
   width: 30%;
@@ -303,8 +349,22 @@ p.done {
 
 #priority-options input[type="radio"]:checked + label {
   opacity: 1;
-  color: #fff;
-  background-color: #000;
+  color: var(--input-color);
+  background-color: var(--input-background);
+}
+
+header {
+  padding: 0;
+}
+
+header h1 {
+  right: var(--margin);
+  text-align: right;
+  margin: 0;
+  font-size: 1.5em;
+  font-weight: 600;
+  line-height: 1;
+  position: relative;
 }
 
 .priority-container input {
@@ -313,8 +373,8 @@ p.done {
 }
 
 ::placeholder {
-  color: var(--high-priority);
-  opacity: .3;
+  color: var(--input-color);
+  opacity: 1;
 }
 
 .priority-container input[type="range"] {
@@ -343,6 +403,7 @@ p.done {
 }
 
 .priority-container h3 {
+  color: var(--input-color);
   margin: 0;
   font-size: .875em;
   font-weight: 400;
@@ -368,25 +429,22 @@ p.done {
 }
 
 .high-priority > .task-container > p:after, .medium-priority > .task-container > p:after, .low-priority > .task-container > p:after {
-  content: "High";
-  background-color: var(--high-priority);
-  color: var(--white);
-  border-radius: 3px;
-  margin: 4px;
-  padding: 2px 4px;
-  font-size: .75em;
+  content: "| | |";
+  color: var(--text);
+  white-space: nowrap;
+  padding: 0 4px;
+  font-size: .6em;
+  font-weight: 900;
   position: relative;
-  top: -6px;
+  top: -11px;
 }
 
 .medium-priority > .task-container > p:after {
-  content: "Medium";
-  background-color: var(--medium-priority);
+  content: "| |";
 }
 
 .low-priority > .task-container > p:after {
-  content: "Low";
-  background-color: var(--low-priority);
+  content: "|";
 }
 
 .switch {
@@ -403,7 +461,8 @@ p.done {
 
 .slider {
   cursor: pointer;
-  background-color: #ccc;
+  background-color: var(--input-color);
+  opacity: .4;
   border-radius: 100px;
   transition: all .2s;
   position: absolute;
@@ -412,7 +471,7 @@ p.done {
 
 .slider:before {
   content: "";
-  background-color: #fff;
+  background-color: var(--input-background);
   border-radius: 100px;
   width: 22px;
   height: 22px;
@@ -423,7 +482,8 @@ p.done {
 }
 
 input:checked + .slider {
-  background-color: var(--high-priority);
+  background-color: var(--input-color);
+  opacity: 1;
 }
 
 input:checked + .slider:before {
@@ -432,7 +492,7 @@ input:checked + .slider:before {
 
 .input-area {
   box-sizing: border-box;
-  background-color: var(--background);
+  background-color: var(--input-background);
   border-radius: var(--border-radius) var(--border-radius) 0 0;
   width: 100%;
   padding: 20px;
@@ -558,6 +618,7 @@ input:checked + .slider:before {
 
 .menu-btn {
   text-align: center;
+  color: var(--input-color);
   margin-top: 24px;
   font-size: .875em;
 }

@@ -585,7 +585,7 @@ var _tinygesture = require("tinygesture");
 var _tinygestureDefault = parcelHelpers.interopDefault(_tinygesture);
 //Loading 
 const loader = document.querySelector(".load-container");
-(0, _auth.onAuthStateChanged)((0, _appJs.auth), (user)=>{
+(0, _auth.onAuthStateChanged)((0, _appJs.auth), async (user)=>{
     if (user) {
         const newTaskInput = document.getElementById("new-task-input");
         const newTaskBtn = document.getElementById("new-task-btn");
@@ -598,6 +598,68 @@ const loader = document.querySelector(".load-container");
         const highPriorityCheckbox = document.getElementById("high-priority");
         const updateTaskBtn = document.getElementById("update-task-btn");
         let currentlyEdditingTaskId = null;
+        //To do list
+        let taskArray = [];
+        //First login - welcome tasks
+        const userDoc = (0, _firestore.doc)((0, _appJs.db), "users", (0, _appJs.auth).currentUser.uid);
+        const userDocSnapshot = await (0, _firestore.getDoc)(userDoc);
+        if (!userDocSnapshot.data().hasBeenWelcomed) {
+            await addWelcomeTasks();
+            await (0, _firestore.updateDoc)(userDoc, {
+                hasBeenWelcomed: true
+            });
+        }
+        async function addWelcomeTasks() {
+            const welcomTasks = [
+                {
+                    task: "Tap a task to mark it as complete",
+                    done: false,
+                    completedDate: null,
+                    priority: 0,
+                    index: 0
+                },
+                {
+                    task: "Swipe right to reveal edit button",
+                    done: false,
+                    completedDate: null,
+                    priority: 0,
+                    index: 1
+                },
+                {
+                    task: "Swipe left to revel remove button",
+                    done: false,
+                    completedDate: null,
+                    priority: 0,
+                    index: 2
+                },
+                {
+                    task: "Completed tasks dissapear after 12 hours",
+                    done: false,
+                    completedDate: null,
+                    priority: 0,
+                    index: 3
+                },
+                {
+                    task: "Tap logo for a good time",
+                    done: false,
+                    completedDate: null,
+                    priority: 0,
+                    index: 4
+                }
+            ];
+            const taskCollection = (0, _firestore.collection)((0, _appJs.db), "users", (0, _appJs.auth).currentUser.uid, "tasks");
+            const batch = (0, _firestore.writeBatch)((0, _appJs.db));
+            for (let task of welcomTasks){
+                const docRef = (0, _firestore.doc)(taskCollection);
+                batch.set(docRef, task);
+                task.id = docRef.id;
+            }
+            await batch.commit();
+            taskArray = [
+                ...welcomTasks,
+                ...taskArray
+            ];
+        }
         //Get tasks from firestore
         async function getTasks() {
             loader.classList.remove("hidden");
@@ -611,14 +673,8 @@ const loader = document.querySelector(".load-container");
                     completedDate: data.completedDate ? data.completedDate.toDate() : null
                 };
             });
-            console.log(taskArray);
             loader.classList.add("hidden");
         }
-        window.addEventListener("keydown", (event)=>{
-            console.log(taskArray);
-        });
-        //To do list
-        let taskArray = [];
         //Remove old tasks
         async function removeOldTasks() {
             const now = new Date();
@@ -666,6 +722,31 @@ const loader = document.querySelector(".load-container");
                     newTaskBtn.classList.add("hidden");
                     updateTaskBtn.classList.add("show");
                     currentlyEdditingTaskId = task.id;
+                    //Open priority options if task has priority
+                    let taskToUpdate = taskArray.find((task)=>task.id === currentlyEdditingTaskId);
+                    if (taskToUpdate && taskToUpdate.priority !== 0) {
+                        prioritySwitch.checked = true;
+                        prioritySlider.value = taskToUpdate.priority;
+                        priorityOptionsContainer.classList.remove("inactive");
+                        switch(taskToUpdate.priority){
+                            case 1:
+                                lowPriorityCheckbox.checked = true;
+                                break;
+                            case 2:
+                                mediumPriorityCheckbox.checked = true;
+                                break;
+                            case 3:
+                                highPriorityCheckbox.checked = true;
+                                break;
+                        }
+                    } else if (taskToUpdate && taskToUpdate.priority === 0) {
+                        prioritySwitch.checked = false;
+                        priorityOptionsContainer.classList.add("inactive");
+                        prioritySlider.value = 0;
+                        lowPriorityCheckbox.checked = false;
+                        mediumPriorityCheckbox.checked = false;
+                        highPriorityCheckbox.checked = false;
+                    }
                 });
                 //Delete task
                 const delBtn = document.createElement("h4");
@@ -732,7 +813,6 @@ const loader = document.querySelector(".load-container");
             try {
                 const taskCollection = (0, _firestore.collection)((0, _appJs.db), "users", (0, _appJs.auth).currentUser.uid, "tasks");
                 const docRef = await (0, _firestore.addDoc)(taskCollection, newTask);
-                console.log("Document written with ID: ", docRef.id);
                 newTask.id = docRef.id;
                 taskArray.push(newTask);
                 renderTasks();
@@ -795,15 +875,11 @@ const loader = document.querySelector(".load-container");
         async function updateIndex() {
             const newTaskArray = [];
             const idArray = sortable.toArray();
-            console.log("id array", idArray);
             idArray.forEach((id)=>{
-                console.log("task array before find", taskArray);
                 const task = taskArray.find((task)=>task.id === id);
                 newTaskArray.push(task);
-                console.log("task", task);
             });
             taskArray = newTaskArray;
-            console.log("task array", taskArray);
             const batch = (0, _firestore.writeBatch)((0, _appJs.db)); // initiate batch        
             taskArray.forEach((task, index)=>{
                 const taskRef = (0, _firestore.doc)((0, _appJs.db), "users", (0, _appJs.auth).currentUser.uid, "tasks", task.id);
@@ -831,8 +907,8 @@ const loader = document.querySelector(".load-container");
             let swiped = false;
             let startOffset = 0;
             const decelerationOnOverflow = 4;
-            const revealWidth = 73;
-            const revealWidthLeft = 48;
+            const revealWidth = 83;
+            const revealWidthLeft = 54;
             const snapWidth = revealWidth / 1.5;
             let swipeDirection = "neutral";
             let position = "neutral";
@@ -901,15 +977,12 @@ const loader = document.querySelector(".load-container");
                     startOffset = 0;
                     swipeDirection = "neutral";
                 }
-                console.log("position", position);
-                console.log("swipeDirection", swipeDirection);
             });
             // reset on tap
             gesture.on("tap", async (event)=>{
                 swipeDirection = 0;
                 const endTime = new Date().getTime();
                 const elapsedTime = endTime - startTime;
-                console.log("elapsedTime", elapsedTime);
                 if (elapsedTime < minSwipeTime && swiped === false) {
                     const task = taskArray.find((task)=>task.id === li.id);
                     if (task) {

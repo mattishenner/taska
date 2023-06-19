@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, signInWithPopup, GoogleAuthProvider } from "firebase/auth"
-import { getFirestore } from "firebase/firestore";
+import { getFirestore, doc, setDoc, getDoc } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBTzLJMA3EEDCYqvmkkjxvgu8tnHTsGTPg",
@@ -27,18 +27,20 @@ const googleBtn = document.getElementById("google-btn");
 let signUp = true;
 
 function switchForms(){
-    console.log("switching forms")
+    signUp = !signUp;
     repeatPassword.classList.toggle("hidden");
     if(signUp){
         switchText.innerText = "Already have an account?";
         switchBtn.innerText = "Sign in";
-        authBtn.innerText = "Sign in";
+        authBtn.innerText = "Sign Up";
     } else {
         switchText.innerText = "Don't have an account yet?";
         switchBtn.innerText = "Sign up";
-        authBtn.innerText = "Sign up";
+        authBtn.innerText = "Sign In";
     }
-    signUp = !signUp;
+}
+if(window.location.href.includes("index")){
+    switchForms();
 }
 
 if(switchBtn){
@@ -49,7 +51,7 @@ if(switchBtn){
 
 //Authenticate users
 if (authBtn) {
-    authBtn.addEventListener("click", (event) => {
+    authBtn.addEventListener("click",  (event) => {
         event.preventDefault()
         const email = document.getElementById("email-input").value;
         const password = document.getElementById("password-input").value;
@@ -59,12 +61,17 @@ if (authBtn) {
         if (signUp){
             if(password === repeatPassword){
                 createUserWithEmailAndPassword(auth, email, password)
-                .then((userCredential) => {
-                    console.log("Signed up")
+                .then(async (userCredential) => {
+                    const user = userCredential.user;
+
+                    //Create new user doc 
+                    const userRef = doc(db, "users", user.uid);
+                    await setDoc(userRef, { hasBeenWelcomed: false});
+
                     window.location.href = "dashboard.html";
                 })
                 .catch((error) => {
-                console.log("error", error)
+                    console.log("error", error)
                 })
             } else {
                 window.alert("Passwords don't match :(")
@@ -74,7 +81,6 @@ if (authBtn) {
         } else {
             signInWithEmailAndPassword(auth, email, password)
                 .then((userCredential) => {
-                    console.log("Signed in")
                     window.location.href = "dashboard.html";
                 })
                 .catch((error) => {
@@ -90,8 +96,15 @@ if (googleBtn) {
         event.preventDefault();
         const provider = new GoogleAuthProvider();
         signInWithPopup(auth, provider)
-            .then((result) => {
-                console.log("Signed in with Google")
+            .then(async (userCredential) => {
+                const user = userCredential.user;
+
+                const userRef = doc(db, "users", user.uid);
+                const docSnap = await getDoc(userRef);
+                if (!docSnap.exists()) {
+                    await setDoc(userRef, { hasBeenWelcomed: false});
+                }
+
                 window.location.href = "dashboard.html";
             })
             .catch((error) => {
@@ -105,9 +118,6 @@ const logoutBtn = document.getElementById("logout-btn");
 if(logoutBtn){
     logoutBtn.addEventListener("click", (event) => {
         signOut(auth)
-            .then(() => {
-                console.log("Signed out")
-            })
             .catch((error) => {
                 console.log("error", error)
             })
@@ -128,9 +138,9 @@ const moreBtn = document.querySelector(".menu-btn");
 const menuContent = document.querySelector(".menu-content");
 const closeIcon = document.querySelector(".close-icon");
 
-moreBtn.addEventListener("click", () => {
+moreBtn?.addEventListener("click", () => {
     menuContent.classList.toggle("show");
 });
-closeIcon.addEventListener("click", () => {
+closeIcon?.addEventListener("click", () => {
     menuContent.classList.toggle("show");
 });

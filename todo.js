@@ -1,4 +1,4 @@
-import { addDoc, collection, getDocs, updateDoc, doc, deleteDoc, query, orderBy, writeBatch, update, commit } from "firebase/firestore";
+import { addDoc, collection, getDocs, updateDoc, doc, deleteDoc, query, orderBy, writeBatch, update, commit, getDoc } from "firebase/firestore";
 import { db, app, auth } from "./app.js";
 import { onAuthStateChanged } from "@firebase/auth";
 import Sortable from "sortablejs";
@@ -8,7 +8,7 @@ import TinyGesture from "tinygesture";
 //Loading 
 const loader = document.querySelector(".load-container");
 
-onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, async (user) => {
     if (user) {
         const newTaskInput = document.getElementById('new-task-input');
         const newTaskBtn = document.getElementById('new-task-btn');
@@ -21,6 +21,37 @@ onAuthStateChanged(auth, (user) => {
         const highPriorityCheckbox = document.getElementById('high-priority');
         const updateTaskBtn = document.getElementById('update-task-btn');
         let currentlyEdditingTaskId = null;
+        //To do list
+        let taskArray = [];
+        
+        //First login - welcome tasks
+        const userDoc = doc(db, "users", auth.currentUser.uid);
+        const userDocSnapshot = await getDoc(userDoc);
+        if (!userDocSnapshot.data().hasBeenWelcomed) {
+            await addWelcomeTasks();
+            await updateDoc(userDoc, { hasBeenWelcomed: true });
+        }
+        async function addWelcomeTasks(){
+            const welcomTasks = [
+                { task: 'Tap a task to mark it as complete', done: false, completedDate: null, priority: 0, index: 0 },
+                { task: 'Swipe right to reveal edit button', done: false, completedDate: null, priority: 0, index: 1 },
+                { task: 'Swipe left to revel remove button', done: false, completedDate: null, priority: 0, index: 2 },
+                { task: 'Completed tasks dissapear after 12 hours', done: false, completedDate: null, priority: 0, index: 3 },
+                { task: 'Tap logo for a good time', done: false, completedDate: null, priority: 0, index: 4 },
+            ]
+
+            const taskCollection = collection(db, "users", auth.currentUser.uid, "tasks");
+            const batch = writeBatch(db);
+
+            for (let task of welcomTasks) {
+                const docRef = doc(taskCollection);
+                batch.set(docRef, task);
+                task.id = docRef.id;
+            }
+
+            await batch.commit();
+            taskArray = [...welcomTasks, ...taskArray];
+        }
 
         //Get tasks from firestore
         async function getTasks() {
@@ -35,16 +66,9 @@ onAuthStateChanged(auth, (user) => {
                     completedDate: data.completedDate ? data.completedDate.toDate() : null
                 }
             })
-            console.log(taskArray)
             loader.classList.add("hidden");
         }
 
-        window.addEventListener("keydown", (event) => {
-            console.log(taskArray)
-        })
-
-        //To do list
-        let taskArray = [];
 
         //Remove old tasks
         async function removeOldTasks() {
@@ -115,6 +139,32 @@ onAuthStateChanged(auth, (user) => {
                     newTaskBtn.classList.add('hidden');
                     updateTaskBtn.classList.add('show');
                     currentlyEdditingTaskId = task.id;
+
+                    //Open priority options if task has priority
+                    let taskToUpdate = taskArray.find(task => task.id === currentlyEdditingTaskId);
+                    if (taskToUpdate && taskToUpdate.priority !== 0) {
+                        prioritySwitch.checked = true;
+                        prioritySlider.value = taskToUpdate.priority;
+                        priorityOptionsContainer.classList.remove('inactive');
+                        switch (taskToUpdate.priority) {
+                            case 1:
+                                lowPriorityCheckbox.checked = true;
+                                break;
+                            case 2:
+                                mediumPriorityCheckbox.checked = true;
+                                break;
+                            case 3:
+                                highPriorityCheckbox.checked = true;
+                                break;
+                        }
+                    } else if (taskToUpdate && taskToUpdate.priority === 0) {
+                        prioritySwitch.checked = false;
+                        priorityOptionsContainer.classList.add('inactive');
+                        prioritySlider.value = 0;
+                        lowPriorityCheckbox.checked = false;
+                        mediumPriorityCheckbox.checked = false;
+                        highPriorityCheckbox.checked = false;
+                    }
                 });
 
                 //Delete task
@@ -202,7 +252,6 @@ onAuthStateChanged(auth, (user) => {
             try {
                 const taskCollection = collection(db, "users", auth.currentUser.uid, "tasks");
                 const docRef = await addDoc(taskCollection, newTask);
-                console.log("Document written with ID: ", docRef.id);
 
                 newTask.id = docRef.id;
 
@@ -275,16 +324,11 @@ onAuthStateChanged(auth, (user) => {
         async function updateIndex() {
             const newTaskArray = [];
             const idArray = sortable.toArray();
-            console.log("id array", idArray);
             idArray.forEach(id => {
-                console.log("task array before find", taskArray);
                 const task = taskArray.find(task => task.id === id);
                 newTaskArray.push(task);
-                console.log("task", task);
             });
             taskArray = newTaskArray;
-            console.log("task array", taskArray);
-
 
             const batch = writeBatch(db); // initiate batch        
             taskArray.forEach((task, index) => {
@@ -314,8 +358,8 @@ onAuthStateChanged(auth, (user) => {
             let swiped = false;
             let startOffset = 0;
             const decelerationOnOverflow = 4;
-            const revealWidth = 73;
-            const revealWidthLeft = 48;
+            const revealWidth = 83;
+            const revealWidthLeft = 54;
             const snapWidth = revealWidth / 1.5;
             let swipeDirection = "neutral";
             let position = "neutral";
@@ -399,8 +443,6 @@ onAuthStateChanged(auth, (user) => {
                     startOffset = 0;
                     swipeDirection = "neutral";
                 }
-                console.log("position", position);
-                console.log("swipeDirection", swipeDirection);
             });
 
             // reset on tap
@@ -408,7 +450,6 @@ onAuthStateChanged(auth, (user) => {
                 swipeDirection = 0;
                 const endTime = new Date().getTime();
                 const elapsedTime = endTime - startTime;
-                console.log("elapsedTime", elapsedTime);
 
                 if (elapsedTime < minSwipeTime && swiped === false) {
                     const task = taskArray.find((task) => task.id === li.id);
